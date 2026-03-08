@@ -1,0 +1,504 @@
+/*
+ * Spatial Computing Theme for Ray Optics Simulation
+ * Glassmorphism aesthetics with floating orb palettes and spring physics
+ */
+
+/* ============================================
+   CSS Custom Properties (Variables)
+   ============================================ */
+:root {
+  /* Glassmorphism core values */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-bg-active: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  
+  /* Backdrop blur values */
+  --blur-standard: blur(20px) saturate(180%);
+  --blur-heavy: blur(30px) saturate(200%);
+  --blur-light: blur(10px) saturate(150%);
+  
+  /* Inner glow for interactive elements */
+  --inner-glow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --inner-glow-strong: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  
+  /* Outer glow for emphasis */
+  --outer-glow: 0 0 20px rgba(255, 255, 255, 0.1);
+  --outer-glow-strong: 0 0 30px rgba(255, 255, 255, 0.15);
+  --outer-glow-colored: 0 0 20px rgba(100, 200, 255, 0.3);
+  
+  /* Spring physics animations */
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-gentle: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring-snappy: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Orb palette dimensions */
+  --orb-size: 56px;
+  --orb-gap: 8px;
+  --orb-border-radius: 50%;
+  
+  /* HUD card styling */
+  --hud-border-radius: 16px;
+  --hud-padding: 16px;
+  
+  /* Shadow depth */
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   Global Glassmorphism Base Styles
+   ============================================ */
+
+/* Glass panel base class */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-standard);
+  -webkit-backdrop-filter: var(--blur-standard);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--inner-glow), var(--shadow-float);
+  border-radius: var(--hud-border-radius);
+}
+
+/* Glass orb button base class */
+.glass-orb {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--inner-glow), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  width: var(--orb-size);
+  height: var(--orb-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s var(--spring-bounce);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.glass-orb:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--inner-glow-strong), var(--outer-glow), 0 6px 24px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+}
+
+.glass-orb:active {
+  background: var(--glass-bg-active);
+  transform: scale(0.95);
+}
+
+.glass-orb.selected {
+  background: rgba(10, 88, 202, 0.6);
+  box-shadow: var(--inner-glow-strong), var(--outer-glow-colored), 0 0 30px rgba(100, 200, 255, 0.4);
+  border-color: rgba(100, 200, 255, 0.3);
+}
+
+/* Glass button (rectangular variant) */
+.glass-button {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--inner-glow);
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.25s var(--spring-bounce);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.glass-button:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--inner-glow-strong), var(--outer-glow);
+}
+
+/* ============================================
+   Spring Physics Animations
+   ============================================ */
+
+@keyframes springIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  60% {
+    transform: scale(1.05) translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes springOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  40% {
+    transform: scale(1.05) translateY(5px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+}
+
+@keyframes floatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: var(--inner-glow), 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: var(--inner-glow-strong), 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes magnetic-snap {
+  0% {
+    transform: translateX(var(--snap-distance, 0));
+  }
+  60% {
+    transform: translateX(calc(var(--snap-distance, 0) * -0.2));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-spring-in {
+  animation: springIn 0.5s var(--spring-bounce) forwards;
+}
+
+.animate-float-in {
+  animation: floatIn 0.6s var(--spring-gentle) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-magnetic-snap {
+  animation: magnetic-snap 0.4s var(--spring-snappy) forwards;
+}
+
+/* ============================================
+   Orb Palette Styles
+   ============================================ */
+
+.orb-palette {
+  display: flex;
+  flex-direction: row;
+  gap: var(--orb-gap);
+  padding: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-standard);
+  -webkit-backdrop-filter: var(--blur-standard);
+  border: 1px solid var(--glass-border);
+  border-radius: calc(var(--orb-size) + 24px);
+  box-shadow: var(--inner-glow), var(--shadow-elevated);
+  transition: all 0.4s var(--spring-bounce);
+}
+
+.orb-palette.magnetic-left {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-left-width: 2px;
+  border-left-color: var(--glass-border-strong);
+}
+
+.orb-palette.magnetic-right {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-right-width: 2px;
+  border-right-color: var(--glass-border-strong);
+}
+
+.orb-palette.magnetic-top {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-top-width: 2px;
+  border-top-color: var(--glass-border-strong);
+}
+
+.orb-palette.magnetic-bottom {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-bottom-width: 2px;
+  border-bottom-color: var(--glass-border-strong);
+}
+
+/* ============================================
+   Floating HUD Card Styles
+   ============================================ */
+
+.floating-hud {
+  position: absolute;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-standard);
+  -webkit-backdrop-filter: var(--blur-standard);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--inner-glow), var(--shadow-elevated);
+  border-radius: var(--hud-border-radius);
+  padding: var(--hud-padding);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12pt;
+  z-index: 100;
+  transition: all 0.3s var(--spring-bounce);
+  pointer-events: auto;
+}
+
+.floating-hud::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--hud-border-radius);
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Contextual HUD connector line */
+.floating-hud.has-connector::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+}
+
+/* ============================================
+   Bloom Effect for Laser Beams
+   ============================================ */
+
+.laser-bloom {
+  filter: drop-shadow(0 0 8px currentColor) 
+          drop-shadow(0 0 16px currentColor) 
+          drop-shadow(0 0 32px currentColor);
+}
+
+.laser-bloom-intense {
+  filter: drop-shadow(0 0 12px currentColor) 
+          drop-shadow(0 0 24px currentColor) 
+          drop-shadow(0 0 48px currentColor)
+          drop-shadow(0 0 64px currentColor);
+}
+
+/* ============================================
+   Dot Grid Pattern (CSS alternative)
+   ============================================ */
+
+.dot-grid {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.15) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+}
+
+.dot-grid-subtle {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 16px 16px;
+}
+
+/* ============================================
+   Form Controls - Glassmorphism
+   ============================================ */
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(100, 200, 255, 0.4);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(100, 200, 255, 0.1);
+}
+
+.glass-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.glass-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s var(--spring-bounce);
+}
+
+.glass-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================
+   Scrollbar - Glass Style
+   ============================================ */
+
+.glass-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.glass-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.glass-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.glass-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ============================================
+   Tooltip/Popover - Glass Style
+   ============================================ */
+
+.glass-tooltip {
+  background: var(--glass-bg-strong) !important;
+  backdrop-filter: var(--blur-heavy) !important;
+  -webkit-backdrop-filter: var(--blur-heavy) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  border-radius: 12px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.glass-tooltip .popover-arrow::before {
+  border-color: var(--glass-border) !important;
+}
+
+/* ============================================
+   Modal - Glass Style
+   ============================================ */
+
+.glass-modal .modal-content {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-elevated);
+  border-radius: 24px;
+}
+
+.glass-modal .modal-header {
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.glass-modal .modal-footer {
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ============================================
+   Dropdown - Glass Style
+   ============================================ */
+
+.glass-dropdown {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-elevated);
+  border-radius: 12px;
+}
+
+.glass-dropdown .dropdown-item {
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 2px 6px;
+  width: calc(100% - 12px);
+}
+
+.glass-dropdown .dropdown-item:hover {
+  background: var(--glass-bg-hover);
+  color: white;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.text-glow-strong {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+}
+
+.border-glow {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 20px rgba(100, 200, 255, 0.2);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

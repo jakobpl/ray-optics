@@ -15,20 +15,20 @@
 -->
 
 <template>
-  <div id="simulator_controls" class="simulator-controls" v-show="showSimulatorControls" :style="controlStyle">
-    <button class="btn-simulator-controls" id="refresh_scene" :style="unselectedIconStyle" v-tooltip-popover="{ title: $t('simulator:simulatorControls.refreshScene.title') }" @click="handleRefreshScene">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-right" viewBox="0 0 18 16">
+  <div id="simulator_controls" class="floating-controls" v-show="showSimulatorControls" :style="[controlStyle, controlContainerStyle]">
+    <button class="control-orb" id="refresh_scene" :class="{ 'active': false }" v-tooltip-popover="{ title: $t('simulator:simulatorControls.refreshScene.title') }" @click="handleRefreshScene">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 18 16">
         <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
         <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
       </svg>
     </button>
-    <button class="btn-simulator-controls" id="refresh_simulation" :style="unselectedIconStyle" v-tooltip-popover="{ title: $t('simulator:simulatorControls.refreshSimulation.title') }" @click="handleRefreshSimulation">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16">
+    <button class="control-orb" id="refresh_simulation" :class="{ 'active': isSimulatorRunning }" v-tooltip-popover="{ title: $t('simulator:simulatorControls.refreshSimulation.title') }" @click="handleRefreshSimulation">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
         <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
       </svg>
     </button>
-    <button class="btn-simulator-controls" :class="{ 'active': isAutoRefreshEnabled }" :style="autoRefreshIconStyle" id="auto_refresh" v-tooltip-popover="{ title: $t('simulator:simulatorControls.autoRefresh.title') }" @click="handleAutoRefresh">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+    <button class="control-orb" :class="{ 'active': isAutoRefreshEnabled, 'pulse': isAutoRefreshEnabled }" id="auto_refresh" v-tooltip-popover="{ title: $t('simulator:simulatorControls.autoRefresh.title') }" @click="handleAutoRefresh">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
         <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9"/>
         <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/>
       </svg>
@@ -72,24 +72,14 @@ export default {
         transform: `translateX(calc(-50% + ${halfSidebarWidth}px))`
       }
     })
-
-    // Computed style for unselected button icons that adapts to theme
-    const unselectedIconStyle = computed(() => {
+    
+    // Container style with glassmorphism
+    const controlContainerStyle = computed(() => {
       const isLight = themeStore.backgroundIsLight.value
-      // Use dark icons for light scenes, light icons for dark scenes
       return {
-        color: isLight ? 'rgba(96, 96, 96, 0.6)' : 'rgba(255, 255, 255, 0.6)'
-      }
-    })
-
-    // Computed style for auto-refresh button - only apply theme color when not active
-    const autoRefreshIconStyle = computed(() => {
-      if (isAutoRefreshEnabled.value) {
-        // When active, let CSS handle the color (white)
-        return {}
-      } else {
-        // When inactive, use theme-based color
-        return unselectedIconStyle.value
+        backgroundColor: isLight ? 'rgba(30, 30, 35, 0.75)' : 'rgba(20, 20, 25, 0.75)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
       }
     })
     
@@ -134,8 +124,7 @@ export default {
       isAutoRefreshEnabled,
       showSimulatorControls,
       controlStyle,
-      unselectedIconStyle,
-      autoRefreshIconStyle,
+      controlContainerStyle,
       handleRefreshScene,
       handleRefreshSimulation,
       handleAutoRefresh
@@ -145,58 +134,91 @@ export default {
 </script>
 
 <style scoped>
-.simulator-controls {
+.floating-controls {
   position: fixed;
-  bottom: 23px;
+  bottom: 30px;
   left: 50%;
-  /* transform is now applied dynamically via controlStyle */
   z-index: 100;
-  background-color: rgba(168, 168, 168, 0.3);
-  color: white;
-  font-size: 12pt;
-  padding: 5px 12px;
-  border-radius: 0.5em;
+  padding: 10px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.4);
   display: flex;
   gap: 10px;
+  animation: controlsFloatIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.btn-simulator-controls {
-  padding: 5px;
-  background-color: rgba(192, 192, 192, 0.2);
+@keyframes controlsFloatIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px) scale(0.9);
+  }
+  60% {
+    transform: translateX(-50%) translateY(-8px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.control-orb {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: none;
-  width: 36px;
-  height: 36px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 0;
 }
 
-.btn-simulator-controls:hover {
-  background-color: rgba(168, 168, 168, 0.8);
+.control-orb:hover {
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  box-shadow: none;
+  transform: scale(1.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 24px rgba(255, 255, 255, 0.2);
 }
 
-.btn-simulator-controls:focus {
-  box-shadow: none;
+.control-orb:active {
+  transform: scale(0.95);
 }
 
-/* Active state for toggle buttons */
-.btn-simulator-controls.active {
-  background-color: rgba(168, 168, 168, 0.7);
-  color: rgba(255, 255, 255, 1);
-}
-
-.btn-simulator-controls.active:hover {
-  background-color: rgba(168, 168, 168, 1.0);
+.control-orb.active {
+  background: rgba(10, 88, 202, 0.6);
+  border-color: rgba(100, 200, 255, 0.3);
   color: white;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(100, 200, 255, 0.4);
 }
 
-/* Ensure all button SVGs have appropriate styling */
-.simulator-controls button svg {
-  background-color: transparent;
-  border-radius: 50%;
+.control-orb.active:hover {
+  background: rgba(10, 88, 202, 0.75);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 30px rgba(100, 200, 255, 0.5);
+}
+
+.control-orb.pulse {
+  animation: orbPulse 2s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(100, 200, 255, 0.3);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 30px rgba(100, 200, 255, 0.5);
+  }
+}
+
+.control-orb svg {
+  transition: transform 0.3s ease;
+}
+
+.control-orb:hover svg {
+  transform: scale(1.1);
 }
 </style>

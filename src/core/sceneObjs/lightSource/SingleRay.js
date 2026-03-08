@@ -70,8 +70,47 @@ class SingleRay extends LineObjMixin(BaseSceneObj) {
       directionColor = this.scene.highlightColor;
     }
 
+    // Draw bloom effect when selected/hovered (spatial computing aesthetic)
+    if (isHovered || this.isSelected) {
+      this._drawBloomEffect(ctx, this.p1, sourceColor, ls);
+    }
+
     canvasRenderer.drawPoint(this.p1, sourceColor, this.scene.theme.sourcePoint.size);
     canvasRenderer.drawPoint(this.p2, directionColor, this.scene.theme.directionPoint.size);
+  }
+
+  /**
+   * Draw bloom effect around the laser source point
+   * @private
+   */
+  _drawBloomEffect(ctx, point, color, ls) {
+    const baseSize = this.scene.theme.sourcePoint.size * ls;
+    const bloomLayers = [
+      { size: baseSize * 4, alpha: 0.15 },
+      { size: baseSize * 3, alpha: 0.25 },
+      { size: baseSize * 2, alpha: 0.4 },
+      { size: baseSize * 1.5, alpha: 0.6 }
+    ];
+
+    // Convert color to CSS string if needed
+    let cssColor;
+    if (Array.isArray(color)) {
+      cssColor = `rgba(${Math.round(color[0] * 255)}, ${Math.round(color[1] * 255)}, ${Math.round(color[2] * 255)}`;
+    } else if (color.r !== undefined) {
+      cssColor = `rgba(${Math.round(color.r * 255)}, ${Math.round(color.g * 255)}, ${Math.round(color.b * 255)}`;
+    } else {
+      cssColor = 'rgba(0, 255, 255';
+    }
+
+    // Draw bloom layers from outside in
+    ctx.save();
+    bloomLayers.forEach(layer => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, layer.size, 0, Math.PI * 2);
+      ctx.fillStyle = `${cssColor}, ${layer.alpha})`;
+      ctx.fill();
+    });
+    ctx.restore();
   }
 
   getDefaultCenter() {

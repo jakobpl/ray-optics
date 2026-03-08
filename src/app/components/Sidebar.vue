@@ -15,7 +15,7 @@
 -->
 
 <template>
-  <div id="sidebar" v-show="showJsonEditor" :style="{ width: sidebarWidth + 'px' }" :data-width="sidebarWidth">
+  <div id="sidebar" v-show="showJsonEditor" :style="[sidebarStyle, { width: sidebarWidth + 'px' }]" :data-width="sidebarWidth">
     <div id="sidebarMobileHeightDiff" class="d-none d-lg-block"></div>
     <div id="jsonEditorContainer">
       <div id="jsonEditor"></div>
@@ -44,6 +44,7 @@ import { usePreferencesStore } from '../store/preferences'
 import { vTooltipPopover } from '../directives/tooltip-popover'
 import { computed, toRef, ref, onMounted, onUnmounted } from 'vue'
 import { jsonEditorService } from '../services/jsonEditor'
+import { useThemeStore } from '../store/theme'
 
 export default {
   name: 'Sidebar',
@@ -52,6 +53,7 @@ export default {
   },
   setup() {
     const preferences = usePreferencesStore()
+    const themeStore = useThemeStore()
     const help = toRef(preferences, 'help')
     const sidebarWidth = toRef(preferences, 'sidebarWidth')
     const tooltipType = computed(() => help.value ? 'popover' : undefined)
@@ -59,6 +61,16 @@ export default {
     const isResizing = ref(false)
     const startX = ref(0)
     const startWidth = ref(0)
+    
+    // Computed style with glassmorphism
+    const sidebarStyle = computed(() => {
+      const isLight = themeStore.backgroundIsLight.value
+      return {
+        backgroundColor: isLight ? 'rgba(30, 30, 35, 0.8)' : 'rgba(20, 20, 25, 0.85)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
+      }
+    })
     
     // Keyboard event handler to prevent propagation
     const handleKeyboardEvent = (e) => {
@@ -162,7 +174,8 @@ export default {
       sidebarWidth,
       tooltipType,
       startResize,
-      blurButton
+      blurButton,
+      sidebarStyle
     }
   }
 }
@@ -172,12 +185,31 @@ export default {
 #sidebar {
   position: absolute;
   z-index: -2;
-  top: 46px;
-  left: 0;
+  top: 80px;
+  left: 20px;
   max-width: 100%;
-  height: calc(100% - 46px);
+  height: calc(100% - 100px);
   display: flex;
   flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: sidebarSpringIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes sidebarSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.95);
+  }
+  60% {
+    transform: translateX(8px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 #sidebarMobileHeightDiff {
@@ -187,10 +219,9 @@ export default {
 #jsonEditorContainer {
   width: 100%;
   flex-grow: 1;
-  background-color:rgba(45, 51, 57,0.8);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(25, 25, 30, 0.6);
   position: relative;
+  border-radius: 16px;
 }
 
 #jsonEditor {
@@ -206,36 +237,72 @@ export default {
 }
 
 .btn-ai-assistant {
-  color: gray;
+  color: rgba(255, 255, 255, 0.7);
   padding: 5px;
-  background-color: rgba(60, 65, 70, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .btn-ai-assistant:hover, .btn-ai-assistant:focus {
-  background-color: rgba(80, 85, 90, 0.8);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(100, 200, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .resize-handle {
   position: absolute;
   top: 0;
   right: 0;
-  width: 4px;
+  width: 6px;
   height: 100%;
   cursor: ew-resize;
   background: transparent;
+  transition: background 0.2s ease;
 }
 
 .resize-handle:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1px;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover::after {
+  opacity: 1;
+}
+
+/* Custom Ace Editor styling for glassmorphism theme */
+:deep(.ace_gutter) {
+  background: rgba(20, 20, 25, 0.5) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+:deep(.ace_scroller) {
+  background: transparent !important;
+}
+
+:deep(.ace_content) {
+  background: transparent !important;
 }
 </style>

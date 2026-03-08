@@ -174,10 +174,16 @@ export default {
 .settings-number {
   background-color: transparent;
   border: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   width: 40px;
   height: 23px;
   text-align: center;
   margin-right: 4px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-number:focus {
+  outline: none;
+  border-bottom-color: rgba(255, 255, 255, 0.6);
 }
 </style>

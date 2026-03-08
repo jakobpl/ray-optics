@@ -131,5 +131,6 @@ export default {
 .percentage-value {
   padding-right: 2px;
   padding-left: 2px;
+  color: rgba(255, 255, 255, 0.9);
 }
 </style>

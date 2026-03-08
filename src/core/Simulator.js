@@ -400,39 +400,47 @@ class Simulator {
       this.canvasRendererGrid = new CanvasRenderer(this.ctxGrid, { x: this.scene.origin.x * this.dpr, y: this.scene.origin.y * this.dpr }, (this.scene.scale * this.dpr), this.scene.lengthScale);
 
       if (this.scene.showGrid) {
-        // Draw the grid
+        // Draw the dot grid pattern (spatial computing aesthetic)
         this.ctxGrid.save();
         this.ctxGrid.setTransform((this.scene.scale * this.dpr), 0, 0, (this.scene.scale * this.dpr), 0, 0);
-        var dashPattern = this.scene.theme.grid.dash.map(value => value * this.scene.lengthScale);
-        var dashPeriod = dashPattern.reduce((a, b) => a + b, 0);
-
-        this.ctxGrid.strokeStyle = `rgb(${Math.round(this.scene.theme.grid.color.r * 255)},${Math.round(this.scene.theme.grid.color.g * 255)},${Math.round(this.scene.theme.grid.color.b * 255)},${this.scene.theme.grid.color.a})`;
-        this.ctxGrid.lineWidth = this.scene.theme.grid.width * this.scene.lengthScale;
-
-        if (dashPeriod * this.scene.scale <= 2) {
-          // The dash pattern is too dense, so we just draw a solid line
-          dashPattern = [];
+        
+        // Grid color with spatial computing subtlety
+        const dotColor = this.scene.theme.grid.color;
+        const dotAlpha = Math.min(dotColor.a * 0.7, 0.3); // Subtle dots
+        this.ctxGrid.fillStyle = `rgba(${Math.round(dotColor.r * 255)},${Math.round(dotColor.g * 255)},${Math.round(dotColor.b * 255)},${dotAlpha})`;
+        
+        // Dot size scales with grid for visual consistency
+        const baseDotSize = 1.5 * this.scene.lengthScale;
+        const dotSize = Math.max(0.5, Math.min(baseDotSize, this.scene.gridSize * 0.08));
+        
+        // Calculate grid bounds
+        const startX = Math.floor((-this.scene.origin.x / this.scene.scale) / this.scene.gridSize) * this.scene.gridSize;
+        const endX = Math.ceil((this.ctxGrid.canvas.width / this.scene.scale - this.scene.origin.x / this.scene.scale) / this.scene.gridSize) * this.scene.gridSize;
+        const startY = Math.floor((-this.scene.origin.y / this.scene.scale) / this.scene.gridSize) * this.scene.gridSize;
+        const endY = Math.ceil((this.ctxGrid.canvas.height / this.scene.scale - this.scene.origin.y / this.scene.scale) / this.scene.gridSize) * this.scene.gridSize;
+        
+        // Draw dot grid pattern
+        const pixelOffsetX = (this.scene.origin.x / this.scene.scale) % this.scene.gridSize;
+        const pixelOffsetY = (this.scene.origin.y / this.scene.scale) % this.scene.gridSize;
+        
+        for (let x = startX; x <= endX; x += this.scene.gridSize) {
+          for (let y = startY; y <= endY; y += this.scene.gridSize) {
+            // Calculate distance from center for subtle vignette effect
+            const centerX = (this.ctxGrid.canvas.width / this.scene.scale) / 2 - (this.scene.origin.x / this.scene.scale);
+            const centerY = (this.ctxGrid.canvas.height / this.scene.scale) / 2 - (this.scene.origin.y / this.scene.scale);
+            const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+            const maxDist = Math.max(this.ctxGrid.canvas.width, this.ctxGrid.canvas.height) / this.scene.scale / 2;
+            const vignette = Math.max(0.3, 1 - (distFromCenter / maxDist) * 0.5);
+            
+            // Draw dot with vignette
+            this.ctxGrid.globalAlpha = vignette;
+            this.ctxGrid.beginPath();
+            this.ctxGrid.arc(x, y, dotSize, 0, Math.PI * 2);
+            this.ctxGrid.fill();
+          }
         }
-
-        // Apply the dash pattern to the context
-        this.ctxGrid.setLineDash(dashPattern);
-
-        // Draw vertical dashed lines
-        this.ctxGrid.beginPath();
-        for (var x = this.scene.origin.x / this.scene.scale % this.scene.gridSize; x <= this.ctxGrid.canvas.width / (this.scene.scale * this.dpr); x += this.scene.gridSize) {
-          this.ctxGrid.moveTo(x, this.scene.origin.y / this.scene.scale % this.scene.gridSize - this.scene.gridSize);
-          this.ctxGrid.lineTo(x, this.ctxGrid.canvas.height / (this.scene.scale * this.dpr));
-        }
-        this.ctxGrid.stroke();
-
-        // Draw horizontal dashed lines
-        this.ctxGrid.beginPath();
-        for (var y = this.scene.origin.y / this.scene.scale % this.scene.gridSize; y <= this.ctxGrid.canvas.height / (this.scene.scale * this.dpr); y += this.scene.gridSize) {
-          this.ctxGrid.moveTo(this.scene.origin.x / this.scene.scale % this.scene.gridSize - this.scene.gridSize, y);
-          this.ctxGrid.lineTo(this.ctxGrid.canvas.width / (this.scene.scale * this.dpr), y);
-        }
-        this.ctxGrid.stroke();
-        this.ctxGrid.setLineDash([]);
+        
+        this.ctxGrid.globalAlpha = 1;
         this.ctxGrid.restore();
       }
     }

@@ -15,11 +15,11 @@
 -->
 
 <template>
-  <div class="footer-left" id="footer-left" :style="notificationStyle">
+  <div class="floating-status-area" id="footer-left" :style="notificationStyle">
     <div class="status-inline">
       <span
         v-show="betaFeatures.length > 0"
-        class="beta-icon"
+        class="beta-badge"
         v-tooltip-popover:popover="{
           title: $t('simulator:footer.betaFeatures.title'),
           content: betaPopoverContent,
@@ -32,26 +32,30 @@
         Beta
       </span>
       <div id="forceStop" v-show="simulatorStatus?.isSimulatorRunning" @click="handleForceStop" :style="forceStopStyle">
-        <div class="spinner-border text-secondary" role="status"></div>
+        <div class="spinner-ring" role="status"></div>
         <span v-html="$t('simulator:footer.processing')"></span>
       </div>
     </div>
-    <div id="status" v-show="showStatus" :style="statusStyle">
-      <div v-html="formattedMousePosition"></div>
-      <div v-html="formattedSimulatorStatus.join('<br>')"></div>
+    
+    <div id="status" class="status-card" v-show="showStatus" :style="statusStyle">
+      <div class="status-content" v-html="formattedMousePosition"></div>
+      <div class="status-content" v-html="formattedSimulatorStatus.join('<br>')"></div>
     </div>
-    <div id="warning" v-show="warnings.length > 0">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 20">
+    
+    <div id="warning" class="alert-card alert-warning" v-show="warnings.length > 0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 20">
         <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
       </svg>
       <span v-html="warnings.join('<br>')"></span>
     </div>
-    <div id="error" v-show="errors.length > 0">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-circle-fill" viewBox="0 0 16 20">
+    
+    <div id="error" class="alert-card alert-error" v-show="errors.length > 0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 20">
         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4m.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
       </svg>
       <span v-html="errors.join('<br>')"></span>
     </div>
+    
     <VirtualKeyboard />
   </div>
 </template>
@@ -87,28 +91,25 @@ export default {
     const sidebarWidth = toRef(preferences, 'sidebarWidth')
     
     const notificationStyle = computed(() => ({
-      left: showJsonEditor.value ? `${sidebarWidth.value}px` : '0px'
+      left: showJsonEditor.value ? `${sidebarWidth.value + 20}px` : '20px'
     }))
 
-    // Computed styles that adapt to theme - status overlay uses scene background color
+    // Computed styles that adapt to theme - status overlay uses glassmorphism
     const statusStyle = computed(() => {
       const isLight = themeStore.backgroundIsLight.value
-      const bgColor = themeStore.getThemeObject('background')?.color || { r: 1, g: 1, b: 1 }
-      
-      // Use actual scene background color with transparency
-      const backgroundColor = `rgba(${Math.round(bgColor.r * 255)}, ${Math.round(bgColor.g * 255)}, ${Math.round(bgColor.b * 255)}, 0.8)`
+      const textColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.85)'
       
       return {
-        color: isLight ? '#333333' : 'gray',
-        backgroundColor: backgroundColor
+        color: textColor,
+        backgroundColor: isLight ? 'rgba(30, 30, 35, 0.7)' : 'rgba(20, 20, 25, 0.7)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
       }
     })
 
     const forceStopStyle = computed(() => {
-      const isLight = themeStore.backgroundIsLight.value
-      // Force stop button should be visible in both themes
       return {
-        color: isLight ? '#666666' : 'gray'
+        color: 'rgba(255, 255, 255, 0.8)'
       }
     })
 
@@ -151,79 +152,166 @@ export default {
 </script>
 
 <style scoped>
-.footer-left {
-  position: absolute;
-  bottom: 0;
-  z-index: -2;
+.floating-status-area {
+  position: fixed;
+  bottom: 20px;
+  z-index: 100;
   padding-right: 80px;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: statusFloatIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes statusFloatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 #forceStop {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   pointer-events: auto;
+  padding: 6px 12px;
+  background: rgba(30, 30, 35, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  transition: all 0.25s ease;
+}
+
+#forceStop:hover {
+  background: rgba(50, 50, 55, 0.8);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.spinner-ring {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .status-inline {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   pointer-events: auto;
 }
 
-.beta-icon {
-  color: #f28d28d0;
+.beta-badge {
+  color: rgba(242, 141, 40, 0.9);
   border: 1px solid currentColor;
-  border-radius: 9px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 18px;
-  padding: 0 6px;
-  margin: 3px;
+  height: 22px;
+  padding: 0 10px;
   box-sizing: border-box;
   font-size: 0.7em;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
+  background: rgba(242, 141, 40, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+  pointer-events: auto;
 }
 
-#forceStop .spinner-border {
-  width: 1rem;
-  height: 1rem;
+.beta-badge:hover {
+  background: rgba(242, 141, 40, 0.2);
+  box-shadow: 0 0 16px rgba(242, 141, 40, 0.3);
 }
 
-#status {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  border-top-right-radius: 0.5em;
+/* Status Card */
+.status-card {
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.3);
+  font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+  font-size: 12px;
+  pointer-events: auto;
   width: fit-content;
-  pointer-events: auto;
+  transition: all 0.3s ease;
 }
 
-#warning {
-  color: black;
-  font-family: monospace;
-  padding-right: 0.5em;
-  background-color:rgb(255,255,0,0.8);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  border-top-right-radius: 0.5em;
-  pointer-events: auto;
+.status-card:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
-#error {
-  color: white;
-  font-family: monospace;
-  padding-right: 0.5em;
-  background-color:rgba(255,0,0,0.7);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  border-top-right-radius: 0.5em;
-  pointer-events: auto;
+.status-content {
+  line-height: 1.5;
 }
 
+/* Alert Cards */
+.alert-card {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+  font-size: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: auto;
+  max-width: 400px;
+  border: 1px solid;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: alertSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes alertSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  60% {
+    transform: translateX(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.alert-card svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alert-warning {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(234, 179, 8, 0.8);
+  backdrop-filter: blur(10px);
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.alert-error {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(220, 53, 69, 0.8);
+  backdrop-filter: blur(10px);
+  border-color: rgba(220, 53, 69, 0.4);
+}
 </style>

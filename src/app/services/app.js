@@ -95,12 +95,13 @@ function initAppService() {
   app.objBar = objBar;
 
   objBar.on('showAdvancedEnabled', function (enabled) {
-    if (enabled) {
-      document.getElementById('showAdvanced').style.display = '';
-      document.getElementById('showAdvanced_mobile_container').style.display = '';
-    } else {
-      document.getElementById('showAdvanced').style.display = 'none';
-      document.getElementById('showAdvanced_mobile_container').style.display = 'none';
+    var showAdvanced = document.getElementById('showAdvanced');
+    var showAdvancedMobile = document.getElementById('showAdvanced_mobile_container');
+    if (showAdvanced) {
+      showAdvanced.style.display = enabled ? '' : 'none';
+    }
+    if (showAdvancedMobile) {
+      showAdvancedMobile.style.display = enabled ? '' : 'none';
     }
   });
 
@@ -116,9 +117,12 @@ function initAppService() {
     editor.selectObj(editor.selectedObjIndex);
   });
 
-  document.getElementById('apply_to_all').addEventListener('change', function () {
-    objBar.shouldApplyToAll = this.checked;
-  });
+  var applyToAllCheckbox = document.getElementById('apply_to_all');
+  if (applyToAllCheckbox) {
+    applyToAllCheckbox.addEventListener('change', function () {
+      objBar.shouldApplyToAll = this.checked;
+    });
+  }
 
 
 
@@ -346,8 +350,10 @@ function initAppService() {
     if (e.newIndex >= 0) {
       objBar.targetObj = scene.objs[e.newIndex];
 
-      document.getElementById('showAdvanced').style.display = 'none';
-      document.getElementById('showAdvanced_mobile_container').style.display = 'none';
+      var showAdvancedEl = document.getElementById('showAdvanced');
+      var showAdvancedMobileEl = document.getElementById('showAdvanced_mobile_container');
+      if (showAdvancedEl) showAdvancedEl.style.display = 'none';
+      if (showAdvancedMobileEl) showAdvancedMobileEl.style.display = 'none';
 
       document.getElementById('obj_bar_main').style.display = '';
       document.getElementById('obj_bar_main').innerHTML = '';
@@ -357,18 +363,24 @@ function initAppService() {
         for (var i = 0; i < scene.objs.length; i++) {
           if (i != e.newIndex && scene.objs[i].constructor.type == scene.objs[e.newIndex].constructor.type) {
             // If there is an object with the same type, then show "Apply to All"
-            document.getElementById('apply_to_all_box').style.display = '';
-            document.getElementById('apply_to_all_mobile_container').style.display = '';
+            var applyToAllBoxEl = document.getElementById('apply_to_all_box');
+            var applyToAllMobileEl = document.getElementById('apply_to_all_mobile_container');
+            if (applyToAllBoxEl) applyToAllBoxEl.style.display = '';
+            if (applyToAllMobileEl) applyToAllMobileEl.style.display = '';
             break;
           }
           if (i == scene.objs.length - 1) {
-            document.getElementById('apply_to_all_box').style.display = 'none';
-            document.getElementById('apply_to_all_mobile_container').style.display = 'none';
+            var applyToAllBoxEl2 = document.getElementById('apply_to_all_box');
+            var applyToAllMobileEl2 = document.getElementById('apply_to_all_mobile_container');
+            if (applyToAllBoxEl2) applyToAllBoxEl2.style.display = 'none';
+            if (applyToAllMobileEl2) applyToAllMobileEl2.style.display = 'none';
           }
         }
       } else {
-        document.getElementById('apply_to_all_box').style.display = 'none';
-        document.getElementById('apply_to_all_mobile_container').style.display = 'none';
+        var applyToAllBoxEl3 = document.getElementById('apply_to_all_box');
+        var applyToAllMobileEl3 = document.getElementById('apply_to_all_mobile_container');
+        if (applyToAllBoxEl3) applyToAllBoxEl3.style.display = 'none';
+        if (applyToAllMobileEl3) applyToAllMobileEl3.style.display = 'none';
       }
 
 
@@ -1002,11 +1014,16 @@ function reset() {
 
   resetDropdownButtons();
 
-  document.getElementById('tool_').checked = true;
-  document.getElementById('tool__mobile').checked = true;
-
-  document.getElementById('apply_to_all').checked = false;
-  document.getElementById('apply_to_all_mobile').checked = false;
+  // Reset checkbox elements if they exist (some may not exist in current UI)
+  var toolEl = document.getElementById('tool_');
+  var toolMobileEl = document.getElementById('tool__mobile');
+  var applyToAllEl = document.getElementById('apply_to_all');
+  var applyToAllMobileEl = document.getElementById('apply_to_all_mobile');
+  
+  if (toolEl) toolEl.checked = true;
+  if (toolMobileEl) toolMobileEl.checked = true;
+  if (applyToAllEl) applyToAllEl.checked = false;
+  if (applyToAllMobileEl) applyToAllMobileEl.checked = false;
   objBar.shouldApplyToAll = false;
 
   simulator.updateSimulation();

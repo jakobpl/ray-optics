@@ -324,15 +324,16 @@ export default {
 }
 
 #showAdvancedSettings {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 14px;
   display: block;
   padding-top: 3px;
+  transition: color 0.2s ease;
 }
 
 #showAdvancedSettings:hover {
-  color: rgba(0, 0, 0, 0.8);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .advanced-settings-container {
